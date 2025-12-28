@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"math"
 	"math/rand/v2"
-	"strings"
 
 	ctp "github.com/catppuccin/go"
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -29,47 +28,9 @@ func main() {
 	// - move all the physics to own file
 	// - make nodes point with pointers instead of ids
 	// - optimise it all
-	linkmap := extractVaultGraph("/home/dormierian/Documents/ObsidianVault/")
-	// linkmap := extractVaultGraph("/home/dormierian/Downloads/obsidian-developer-docs/")
 	flavour := ctp.Frappe
-
-	graph := make(map[string]*Node)
-
-	for name, links := range linkmap {
-		graph[name] = &Node{
-			Name:     name,
-			Outgoing: links,
-			Pos:      randVec(),
-			Color:    colorize(flavour.Teal()),
-		}
-	}
-
-	for _, node := range graph {
-		for _, link := range node.Outgoing {
-			if _, ok := graph[link]; !ok {
-				if strings.HasPrefix(link, "#") {
-					graph[link] = &Node{
-						Name:     link,
-						Outgoing: []string{},
-						Pos:      randVec(),
-						Color:    colorize(flavour.Green()),
-					}
-				} else {
-					graph[link] = &Node{
-						Name:     link,
-						Outgoing: []string{},
-						Pos:      randVec(),
-						Color:    colorize(flavour.Subtext0()),
-					}
-				}
-			}
-			target := graph[link]
-			target.LinkCount++
-
-			target.Incoming = append(target.Incoming, node.Name)
-		}
-		node.LinkCount++
-	}
+	// graph := extractVaultGraph("/home/dormierian/Downloads/obsidian-developer-docs/")
+	graph := extractVaultGraph("/home/dormierian/Documents/ObsidianVault/", flavour)
 
 	rl.SetConfigFlags(rl.FlagWindowResizable)
 	rl.SetConfigFlags(rl.FlagMsaa4xHint)
@@ -166,8 +127,7 @@ func main() {
 		rl.BeginMode2D(camera)
 
 		for _, node := range graph {
-			for _, link := range node.Outgoing {
-				target := graph[link]
+			for _, target := range node.Outgoing {
 				var color color.RGBA
 				if node.IsHovered(camera) || target.IsHovered(camera) {
 					color = colorize(flavour.Teal())

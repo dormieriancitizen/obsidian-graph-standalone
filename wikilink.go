@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 
+	ctp "github.com/catppuccin/go"
 	hashtag "go.abhg.dev/goldmark/hashtag"
 	wikilink "go.abhg.dev/goldmark/wikilink"
 )
@@ -54,8 +55,30 @@ func extractWikilinks(md []byte) []string {
 	return names
 }
 
-func extractVaultGraph(vaultRoot string) map[string][]string {
-	graph := make(map[string][]string)
+func pathSuffixes(p string) []string {
+	p = filepath.Clean(p)
+
+	var result []string
+	for {
+		base := filepath.Base(p)
+		if len(result) == 0 {
+			result = append(result, base)
+		} else {
+			result = append(result, filepath.Join(base, result[len(result)-1]))
+		}
+
+		dir := filepath.Dir(p)
+		if dir == "." || dir == p {
+			break
+		}
+		p = dir
+	}
+
+	return result
+}
+
+func extractVaultGraph(vaultRoot string, flavour ctp.Flavour) []*Node {
+	linkmap := make(map[string][]string)
 
 	err := filepath.WalkDir(vaultRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -76,12 +99,72 @@ func extractVaultGraph(vaultRoot string) map[string][]string {
 			return nil
 		}
 
-		graph[cleanWikilink(filepath.Base(path))] = extractWikilinks(data)
+		rel, err := filepath.Rel(vaultRoot, path)
+		if err != nil {
+			panic("Non-relative path inside of vault root??")
+		}
+		linkmap[cleanWikilink(rel)] = extractWikilinks(data)
 		return nil
 	})
 
 	if err != nil {
 		panic(err)
+	}
+
+	graph := []*Node{}
+	index := make(map[string]*Node)
+
+	for name, _ := range linkmap {
+		node := &Node{
+			Name:  filepath.Base(name),
+			Pos:   randVec(),
+			Color: colorize(flavour.Teal()),
+		}
+
+		for _, path := range pathSuffixes(name) {
+			if _, ok := index[path]; !ok {
+				index[path] = node
+			}
+		}
+		graph = append(graph, node)
+	}
+
+	for name, _ := range index {
+		fmt.Println(name)
+	}
+
+	for name, links := range linkmap {
+		node, ok := index[name]
+		if !ok {
+			panic("Could not find node " + name)
+		}
+
+		for _, link := range links {
+			var target *Node
+			if target, ok := index[link]; !ok {
+				if strings.HasPrefix(link, "#") {
+					target = &Node{
+						Name:  filepath.Base(link),
+						Pos:   randVec(),
+						Color: colorize(flavour.Green()),
+					}
+				} else {
+					target = &Node{
+						Name:  filepath.Base(link),
+						Pos:   randVec(),
+						Color: colorize(flavour.Subtext0()),
+					}
+				}
+				index[link] = target
+				graph = append(graph, target)
+			}
+			target = index[link]
+
+			node.Outgoing = append(node.Outgoing, target)
+			target.Incoming = append(target.Incoming, node)
+			target.LinkCount++
+			node.LinkCount++
+		}
 	}
 	return graph
 }

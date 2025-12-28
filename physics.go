@@ -13,7 +13,7 @@ var connectionStrength = float32(0.02)
 var connectionLength = float32(150)
 var damping = 0.97
 
-func graphStep(graph map[string]*Node) error {
+func graphStep(graph []*Node) error {
 	for _, node := range graph {
 		force := rl.NewVector2(0, 0)
 
@@ -31,7 +31,7 @@ func graphStep(graph map[string]*Node) error {
 		}
 
 		// hookes law
-		for _, target := range node.Links(graph) {
+		for _, target := range node.Links() {
 			if target.Name == node.Name {
 				continue
 			}
@@ -61,8 +61,8 @@ func graphStep(graph map[string]*Node) error {
 			dir := rl.Vector2Subtract(node.Pos, target.Pos)
 			distance := rl.Vector2Length(dir)
 
-			if distance <= 1 {
-				distance = 1
+			if distance <= 10 {
+				distance = 10
 			}
 
 			repulseCharge := repulsionStrength // float32(node.Mass()) * float32(target.Mass())
@@ -79,51 +79,15 @@ func graphStep(graph map[string]*Node) error {
 			)
 		}
 
-		// fmt.Println(force)
 		node.Vel = rl.Vector2Add(
 			node.Vel,
 			rl.Vector2Scale(force, 1.0/float32(node.Mass())),
 		)
 		node.Vel = rl.Vector2Scale(node.Vel, float32(damping))
-		// node.Pos = rl.Vector2Add(node.Pos, rl.NewVector2(rand.Float32(), rand.Float32()))
 	}
 
 	for _, node := range graph {
 		node.Pos = rl.Vector2Add(node.Pos, node.Vel)
-	}
-
-	for _, node := range graph {
-		for _, target := range graph {
-			if node.Name == target.Name {
-				continue
-			}
-			overlap, dist, normal := node.Overlap(target)
-			if !overlap {
-				continue
-			}
-			penetration := (node.Radius() + target.Radius()) - dist
-			if penetration > 0 {
-				correction := rl.Vector2Scale(normal, penetration*0.5)
-
-				node.Pos = rl.Vector2Subtract(node.Pos, correction)
-				target.Pos = rl.Vector2Add(target.Pos, correction)
-			}
-			relativeVel := rl.Vector2Subtract(target.Vel, node.Vel)
-			velAlongNormal := rl.Vector2DotProduct(relativeVel, normal)
-
-			if velAlongNormal > 0 {
-				restitution := float32(0.3) // 0 = sticky, 1 = bouncy
-
-				impulseMag := -(1 + restitution) * velAlongNormal
-				impulseMag /= (1 / node.Mass()) + (1 / target.Mass())
-
-				impulse := rl.Vector2Scale(normal, impulseMag)
-
-				node.Vel = rl.Vector2Subtract(node.Vel, rl.Vector2Scale(impulse, 1/node.Mass()))
-				target.Vel = rl.Vector2Add(target.Vel, rl.Vector2Scale(impulse, 1/target.Mass()))
-			}
-
-		}
 	}
 
 	return nil

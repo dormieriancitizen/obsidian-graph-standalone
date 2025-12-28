@@ -9,23 +9,23 @@ import (
 
 type Node struct {
 	Name      string
-	Outgoing  []string
-	Incoming  []string
+	Outgoing  []*Node
+	Incoming  []*Node
 	Pos       rl.Vector2
 	Vel       rl.Vector2
 	LinkCount int
 	Color     color.RGBA
 }
 
-func (n *Node) Links(graph map[string]*Node) []*Node {
+func (n *Node) Links() []*Node {
 	out := []*Node{}
-	for _, link := range n.Incoming {
-		if target, ok := graph[link]; ok {
+	for _, target := range n.Incoming {
+		if target != nil {
 			out = append(out, target)
 		}
 	}
-	for _, link := range n.Outgoing {
-		if target, ok := graph[link]; ok {
+	for _, target := range n.Outgoing {
+		if target != nil {
 			out = append(out, target)
 		}
 	}
