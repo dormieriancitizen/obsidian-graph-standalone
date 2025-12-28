@@ -1,0 +1,56 @@
+package main
+
+import (
+	"image/color"
+	"math"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
+)
+
+type Node struct {
+	Name      string
+	Outgoing  []string
+	Incoming  []string
+	Pos       rl.Vector2
+	Vel       rl.Vector2
+	LinkCount int
+	Color     color.RGBA
+}
+
+func (n *Node) Links(graph map[string]*Node) []*Node {
+	out := []*Node{}
+	for _, link := range n.Incoming {
+		if target, ok := graph[link]; ok {
+			out = append(out, target)
+		}
+	}
+	for _, link := range n.Outgoing {
+		if target, ok := graph[link]; ok {
+			out = append(out, target)
+		}
+	}
+	return out
+}
+
+func (n *Node) Mass() float32 {
+	return float32(5 + math.Log(float64(n.LinkCount+1)))
+}
+func (n *Node) Radius() float32 {
+	return float32(5 + math.Log(float64(n.LinkCount+1)))
+}
+
+func (n *Node) IsHovered(camera rl.Camera2D) bool {
+	mouseWorldPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), camera)
+	return rl.Vector2Length(rl.Vector2Subtract(mouseWorldPos, n.Pos)) < n.Mass()
+}
+func (n *Node) Overlap(b *Node) (bool, float32, rl.Vector2) {
+	delta := rl.Vector2Subtract(b.Pos, n.Pos)
+	dist := rl.Vector2Length(delta)
+	minDist := n.Radius() + b.Radius()
+
+	if dist == 0 {
+		return true, 0, rl.NewVector2(1, 0)
+	}
+
+	return dist < minDist, dist, rl.Vector2Scale(delta, 1.0/dist)
+}
