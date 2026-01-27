@@ -36,12 +36,12 @@ func (n *Node) Mass() float32 {
 	return float32(5 + math.Log(float64(n.LinkCount+1)))
 }
 func (n *Node) Radius() float32 {
-	return float32(5 + math.Log(float64(n.LinkCount+1)))
+	return float32(5 + math.Sqrt(float64(n.LinkCount+1)))
 }
 
 func (n *Node) IsHovered(camera rl.Camera2D) bool {
 	mouseWorldPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), camera)
-	return rl.Vector2Length(rl.Vector2Subtract(mouseWorldPos, n.Pos)) < n.Mass()
+	return rl.Vector2Length(rl.Vector2Subtract(mouseWorldPos, n.Pos)) < n.Radius()
 }
 func (n *Node) Overlap(b *Node) (bool, float32, rl.Vector2) {
 	delta := rl.Vector2Subtract(b.Pos, n.Pos)

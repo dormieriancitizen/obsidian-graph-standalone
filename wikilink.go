@@ -118,7 +118,7 @@ func extractVaultGraph(vaultRoot string, flavour ctp.Flavour) []*Node {
 		node := &Node{
 			Name:  filepath.Base(name),
 			Pos:   randVec(),
-			Color: colorize(flavour.Teal()),
+			Color: colorize(flavour.Blue()),
 		}
 
 		for _, path := range pathSuffixes(name) {
@@ -129,10 +129,6 @@ func extractVaultGraph(vaultRoot string, flavour ctp.Flavour) []*Node {
 		graph = append(graph, node)
 	}
 
-	for name, _ := range index {
-		fmt.Println(name)
-	}
-
 	for name, links := range linkmap {
 		node, ok := index[name]
 		if !ok {
@@ -141,6 +137,7 @@ func extractVaultGraph(vaultRoot string, flavour ctp.Flavour) []*Node {
 
 		for _, link := range links {
 			var target *Node
+			// fmt.Printf("%s -> %s\n", name, link)
 			if target, ok := index[link]; !ok {
 				if strings.HasPrefix(link, "#") {
 					target = &Node{

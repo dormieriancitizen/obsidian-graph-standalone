@@ -9,7 +9,9 @@ import (
 
 var gravityStrength = float32(0.0005)
 var repulsionStrength = float32(500)
-var connectionStrength = float32(0.02)
+
+// var repulsionStrength = float32(5)
+var connectionStrength = float32(0.03)
 var connectionLength = float32(150)
 var damping = 0.97
 
@@ -32,7 +34,7 @@ func graphStep(graph []*Node) error {
 
 		// hookes law
 		for _, target := range node.Links() {
-			if target.Name == node.Name {
+			if target == node {
 				continue
 			}
 
@@ -54,7 +56,7 @@ func graphStep(graph []*Node) error {
 
 		// repulsion
 		for _, target := range graph {
-			if target.Name == node.Name {
+			if target == node {
 				continue
 			}
 
@@ -65,7 +67,7 @@ func graphStep(graph []*Node) error {
 				distance = 10
 			}
 
-			repulseCharge := repulsionStrength // float32(node.Mass()) * float32(target.Mass())
+			repulseCharge := repulsionStrength // * float32(node.Mass()) * float32(target.Mass())
 
 			toAdd := rl.Vector2Scale(rl.Vector2Normalize(dir), repulseCharge/(distance*distance))
 			if math.IsNaN(float64(toAdd.X)) {
