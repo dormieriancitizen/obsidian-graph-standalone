@@ -132,7 +132,6 @@ func doInput(state *State) {
 		delta := rl.Vector2Scale(rl.GetMouseDelta(), -1.0/state.camera.Zoom)
 
 		if state.draggedNode != nil {
-			// draggedNode.Vel = rl.NewVector2(0, 0)
 			state.draggedNode.Pos = rl.GetScreenToWorld2D(rl.GetMousePosition(), state.camera)
 			state.draggedNode.Vel = rl.Vector2Scale(delta, -1)
 		} else {
@@ -142,13 +141,10 @@ func doInput(state *State) {
 
 	if wheel := rl.GetMouseWheelMove(); wheel != 0 {
 		mouseWorldPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), state.camera)
-		if wheel < 0 {
-			state.camera.Offset = rl.GetMousePosition()
-		}
-		state.camera.Target = mouseWorldPos
-
 		scale := 0.2 * wheel
 		state.camera.Zoom = rl.Clamp(float32(math.Exp(math.Log(float64(state.camera.Zoom))+float64(scale))), 0.125, 64.0)
+		state.camera.Offset = rl.GetMousePosition()
+		state.camera.Target = mouseWorldPos
 	}
 }
 
@@ -165,25 +161,37 @@ func main() {
 
 	rl.SetConfigFlags(rl.FlagWindowResizable)
 	rl.SetConfigFlags(rl.FlagMsaa4xHint)
-	rl.InitWindow(800, 450, "Vault Graph")
+	rl.SetConfigFlags(rl.FlagWindowHighdpi)
+
+	rl.InitWindow(1500, 1000, "Vault Graph")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	state := State{
 		graph: graph,
 		camera: rl.Camera2D{
-			Target:   rl.NewVector2(0, 0),
-			Offset:   rl.NewVector2(400, 225),
+			Target: rl.NewVector2(0, 0),
+			Offset: rl.NewVector2(
+				float32(rl.GetScreenWidth())/2,
+				float32(rl.GetScreenHeight())/2,
+			),
 			Rotation: 0,
 			Zoom:     1.0,
 		},
 	}
 
 	for !rl.WindowShouldClose() {
+		if rl.IsWindowResized() {
+			state.camera.Offset = rl.NewVector2(
+				float32(rl.GetScreenWidth())/2,
+				float32(rl.GetScreenHeight())/2,
+			)
+		}
+
 		if !state.paused {
 			state.ticks++
 			if state.ticks < 500 {
-				for _ = range 10 {
+				for range 10 {
 					graphStep(graph)
 				}
 			}

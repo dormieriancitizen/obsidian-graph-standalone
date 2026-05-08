@@ -114,7 +114,7 @@ func extractVaultGraph(vaultRoot string, flavour ctp.Flavour) []*Node {
 	graph := []*Node{}
 	index := make(map[string]*Node)
 
-	for name, _ := range linkmap {
+	for name := range linkmap {
 		node := &Node{
 			Name:  filepath.Base(name),
 			Pos:   randVec(),
