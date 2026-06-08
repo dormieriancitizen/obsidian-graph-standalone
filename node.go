@@ -8,13 +8,14 @@ import (
 )
 
 type Node struct {
-	Name      string
-	Outgoing  []*Node
-	Incoming  []*Node
-	Pos       rl.Vector2
-	Vel       rl.Vector2
-	LinkCount int
-	Color     color.RGBA
+	Name        string
+	Outgoing    []*Node
+	Incoming    []*Node
+	Pos         rl.Vector2
+	Vel         rl.Vector2
+	LinkCount   int
+	Color       color.RGBA
+	StringLinks []string
 }
 
 func (n *Node) Links() []*Node {

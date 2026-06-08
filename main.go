@@ -191,7 +191,7 @@ func main() {
 		if !state.paused {
 			state.ticks++
 			if state.ticks < 500 {
-				for range 10 {
+				for range 0 {
 					graphStep(graph)
 				}
 			}
@@ -221,10 +221,8 @@ func main() {
 
 		for _, node := range state.graph {
 			dimmed := false
-			highlight := false
 
 			if hovered {
-				highlight = true
 				dimmed = !node.IsHovered(state.camera)
 				for _, target := range node.Links() {
 					if target.IsHovered(state.camera) {
@@ -234,7 +232,6 @@ func main() {
 			}
 
 			if state.searching {
-				highlight = true
 				dimmed = !strings.Contains(node.Name, state.search) && len(state.search) > 0
 			}
 
@@ -247,16 +244,18 @@ func main() {
 					A: 255 / 3,
 				}
 				rl.DrawCircleV(node.Pos, float32(node.Radius()-1), alphad)
-			} else if highlight {
-				rl.DrawCircleV(node.Pos, float32(node.Radius()+4), colorize(flavour.Mauve()))
-				rl.DrawCircleV(node.Pos, float32(node.Radius()+2), node.Color)
 			} else {
 				rl.DrawCircleV(node.Pos, float32(node.Radius()), colorize(flavour.Crust()))
 				rl.DrawCircleV(node.Pos, float32(node.Radius()-1), node.Color)
 
 			}
 
-			rl.DrawText(node.Name, int32(node.Pos.X), int32(node.Pos.Y), 10, colorize(flavour.Text()))
+			nodeFontColor := flavour.Text()
+			if dimmed {
+				nodeFontColor = flavour.Subtext0()
+			}
+
+			rl.DrawText(node.Name, int32(node.Pos.X), int32(node.Pos.Y), 10, colorize(nodeFontColor))
 		}
 
 		rl.EndMode2D()
